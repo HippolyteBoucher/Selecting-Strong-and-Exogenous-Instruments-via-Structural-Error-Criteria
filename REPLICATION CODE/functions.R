@@ -1,5 +1,5 @@
 
-##### Estimator build
+##### Estimators
 
 ### IV estimator
 
@@ -46,7 +46,7 @@ est<-function(y,x,z, type="2sls"){
   return(b_est)
 }
 
-### estimator of asymptotic variance of estimator
+### Estimator of asymptotic variance of IV estimator
 
 b_sig<-function(y,x,z,type="2sls"){
   z<-as.matrix(z)
@@ -64,9 +64,7 @@ b_sig<-function(y,x,z,type="2sls"){
     } else if (s==1){
       b_est<-zy/zx
       err<-sum((y-x*as.numeric(b_est))^2)/(n*(zx^2/zz))
-    }
-    
-    
+    } 
   } else if (type=="jive"){
     if (s>1){
       num1<-as.numeric(t(zx)%*%solve(zz)%*%zy)
@@ -97,19 +95,20 @@ b_sig<-function(y,x,z,type="2sls"){
   }
   
   return(err)
+  
 }
 
 
-##### Confidence Intervals Build
+##### Confidence intervals
 
-### asymptotic normal confidence interval
+### Confidence interval based on Gaussian asymptotics
 
 ci_an<-function(b_est,sig,coverage){
   conf<-c(b_est+qnorm((1-coverage)/2)*sqrt(sig),b_est+qnorm(1-(1-coverage)/2)*sqrt(sig))
   return(conf)
 }
 
-### weak identification robust confidence interval
+### Weak identification robust confidence interval
 
 ci_robust<-function(y,x,z,coverage,type_ci="AR"){
   
@@ -140,9 +139,11 @@ ci_robust<-function(y,x,z,coverage,type_ci="AR"){
 }
 
 
-##### Risk build
+##### Building the risks
 
-### all the risks
+### From the paper
+
+## R_EXO
 
 R1<-function(y,x,z,b_est){
   z<-as.matrix(z)
@@ -158,6 +159,8 @@ R1<-function(y,x,z,b_est){
   return(risk)
 }
 
+## R_PMSE
+
 R2<-function(y,x,z,b_est){
   z<-as.matrix(z)
   n<-dim(z)[1]
@@ -172,6 +175,8 @@ R2<-function(y,x,z,b_est){
   risk<-sum((y-z%*%pi_z%*%b_est)^2)/n
   return(risk)
 }
+
+## R_WMSE
 
 R3<-function(y,x,z,b_est){
   z<-as.matrix(z)
@@ -189,13 +194,15 @@ R3<-function(y,x,z,b_est){
   return(risk)
 }
 
+## R_MSE
+
 R4<-function(y,x,z,b_est){
   n<-length(y)
   risk<-sum((y-x*b_est)^2)/n/var(x)
   return(risk)
 }
 
-### risk function
+### Final risk function
 
 Risk<-function(y,x,z,b_est,type="1"){
   z<-as.matrix(z)
@@ -216,14 +223,14 @@ Risk<-function(y,x,z,b_est,type="1"){
 
 ##### Resampling
 
-### bootstrap sample
+### Bootstrap sample
 
 resample_bt<-function(n,kc){
   ind<-sample(1:n,n,replace=TRUE)
   return(ind)
 }
 
-### cross-validated sample
+### Cross-validated sample
 
 resample_cv<-function(n,kc){
   ind_pre<-sample(1:n,n*kc,replace=FALSE)
@@ -231,7 +238,7 @@ resample_cv<-function(n,kc){
   return(ind)
 }
 
-### disjoint out-of-bag bootstrap sample
+### Disjoint out-of-bag bootstrap sample
 
 resample_oob<-function(n,kc){
   ind_pre<-sample(1:n,n*kc,replace=FALSE)
@@ -241,7 +248,7 @@ resample_oob<-function(n,kc){
   return(ind)
 }
 
-### real out-of-bag bootstrap sample
+### Out-of-bag bootstrap sample
 
 resample_oob2<-function(n,kc){
   ind_pre<-sample(1:n,n*kc,replace=TRUE)
@@ -249,7 +256,7 @@ resample_oob2<-function(n,kc){
   return(ind)
 }
 
-### get resample of the chosen type
+### Final resample function
 
 resample<-function(n,kc,type="bt"){
   if (type=="bt"){
@@ -269,7 +276,7 @@ resample<-function(n,kc,type="bt"){
   return(ind)
 }
 
-### get B resamples
+### Resampling B times with proportion kc for training
 
 sample_boot<-function(n,kc,B,type="bt"){
   if (type=="cv2"){
@@ -282,7 +289,7 @@ sample_boot<-function(n,kc,B,type="bt"){
 
 ##### Risk Estimators
 
-### Apparent Risk Estimator
+### Apparent risk Estimator
 
 risk_app<-function(y,x,z,type_est="2sls",type_risk="1"){
   b_est<-as.numeric(est(y,x,z,type_est))
@@ -290,7 +297,7 @@ risk_app<-function(y,x,z,type_est="2sls",type_risk="1"){
   return(r)
 }
 
-### bootstrap risk estimator
+### Bootstrap risk estimator
 
 risk_bt<-function(y,x,z,SB,type_est="2sls",type_risk="1"){
   n<-length(y)
@@ -302,7 +309,7 @@ risk_bt<-function(y,x,z,SB,type_est="2sls",type_risk="1"){
   return(r)
 }
 
-### risk estimator using cross-validation or out-of-bag
+### Risk estimator using cross-validation or out-of-bag
 
 risk_out<-function(y,x,z,kc,SB,type_est="2sls",type_risk="1"){
   n<-length(y)
@@ -330,10 +337,9 @@ risk_out2<-function(y,x,z,kc,B,type_est="2sls",type_risk="1"){
 }
 
 
-##### Risk Estimators in practice
+##### Risk estimators in practice
 
-### 3 risk estimators at the same time
-
+### Risk estimators R_EXO, R_PMSE and R_MSE at the same time
 
 risk_est_bit<-function(y,x,z,kc,B,SB,type_est,test_z,inc=T,cv=1){
   
@@ -390,7 +396,6 @@ risk_est<-function(y,x,z,kc,B,SB,type_est,test_z,inc=T,cv=1){
   return(r)
   
 }
-
 
 ### Donald Newey (2001)
 
@@ -473,7 +478,7 @@ risk_dn<-function(y,x,z,test_z,type_est="2sls",type_sig="cv",inc=T,oracle=T){
 }
 
 
-##### Andrews (1999)
+### Andrews (1999)
 
 risk_ad_bit<-function(y,x,z,test_z,type_est="2sls"){
   
@@ -512,7 +517,7 @@ risk_ad<-function(y,x,z,test_z,type_est="2sls"){
 
 
 
-##### Kang (2016) Post-Lasso
+### Kang (2016) Post-Lasso
 
 risk_lasso<-function(y,x,z,lambda=F,K=10,normalize=F,package=T){
   if (package==T){
@@ -535,9 +540,7 @@ risk_lasso<-function(y,x,z,lambda=F,K=10,normalize=F,package=T){
   return(LASSO_iv)
 }
 
-##### Windmeijer (2019) Post-Adaptive-Lasso
-
-
+### Windmeijer (2019) Post-Adaptive-Lasso
 
 risk_adalasso<-function(y,x,z,lambda=F,K=10,normalize=F){
   
@@ -569,11 +572,7 @@ risk_adalasso<-function(y,x,z,lambda=F,K=10,normalize=F){
   return(ADALASSO_iv)
 }
 
-
-
-
-
-##### Find all possible combinations
+##### All possible combinations of IVs
 
 mat_z<-function(kz){
   pos_val<-c(0,1)
@@ -582,7 +581,7 @@ mat_z<-function(kz){
   return(mat_pos)
 }
 
-##### Diagnostics Empirical
+##### Diagnostics empirical
 
 diag_est_bit<-function(y,x,z,bet,coverage,test_z,type_est="2sls",type_ci="AR",inc=T){
   
@@ -675,6 +674,8 @@ diag_estf<-function(set_diag,ri=F){
   
 }
 
+### Notation for estimates with p-values
+
 pval_notation<-function(x,pval){
   if (pval<=0.001) {
     val<-paste(as.character(x),"$^{****}$")
@@ -689,6 +690,8 @@ pval_notation<-function(x,pval){
   }
   return(val)
 }
+
+### First stage F-statistic
 
 Fstats<-function(y,x,bet,clus=F,clus_x){
   x<-as.matrix(x)
@@ -721,6 +724,8 @@ Fstats<-function(y,x,bet,clus=F,clus_x){
   return(Fstat)
 }
 
+### Sargan Hansen (1982) J statistic
+
 Jstats<-function(y,x,z,bet,clus=F,clus_x){
   z<-as.matrix(z)
   uh<-y-x*as.numeric(bet)
@@ -740,6 +745,8 @@ Jstats<-function(y,x,z,bet,clus=F,clus_x){
   }
   return(c(J_iv,p_val_j))
 }
+
+### Final function for diagnotics
 
 diag_appli<-function(y,x,z,test_z,type_est="2sls",se="het",ivex=2){
   
@@ -776,6 +783,8 @@ diag_appli<-function(y,x,z,test_z,type_est="2sls",se="het",ivex=2){
   return(out)
 }
 
+### Diagnostics for OLS
+
 diag_est_ols<-function(y,x,bet,coverage){
   
   n<-length(y)
@@ -790,10 +799,9 @@ diag_est_ols<-function(y,x,bet,coverage){
   return(c(b_ols,sqrt(var_ols),abs_bias,sq_bias,cov_an,len_an))
 }
 
-##### Diagnostic Theoretical
+##### Theoretical diagnostics for simulations
 
-
-### Pick set S function
+### Function to pick set S
 
 A_z<-function(test_z){
   nz<-sum(test_z)
@@ -809,7 +817,6 @@ A_z<-function(test_z){
   A<-A[,-1]
   return(A)
 }
-
 
 ### Concentration parameter bar(S) not included as controls
 
@@ -878,7 +885,7 @@ bias_2sls<-function(pi,true_z,test_z,alpha_true,sig_z){
   return(bias)
 }
 
-### Combine
+### Final functions for simulations theoretical diagnostics
 
 diag_theor_bit<-function(n,test_z,pi,sig_z,sig_v,rho,type_diag="inc",true_z,alpha_true){
   if (type_diag=="ninc"){
